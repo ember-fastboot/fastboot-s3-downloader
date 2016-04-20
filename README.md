@@ -4,6 +4,8 @@ This downloader for the [FastBoot App Server][app-server] works with AWS
 S3 to download and unzip the latest version of your deployed
 application.
 
+[app-server]: https://github.com/ember-fastboot/fastboot-app-server
+
 To use the downloader, configure it with an S3 bucket and key:
 
 ```js
