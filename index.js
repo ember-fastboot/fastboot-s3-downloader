@@ -49,11 +49,11 @@ class S3Downloader {
   }
 
   fetchCurrentVersion() {
-    this.ui.writeLine('fetching current app version');
-
     return new Promise((res, rej) => {
       let bucket = this.configBucket;
       let key = this.configKey;
+
+      this.ui.writeLine('fetching current app version from ' + bucket + '/' + key);
 
       let params = {
         Bucket: bucket,
