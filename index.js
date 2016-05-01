@@ -2,11 +2,9 @@
 
 const AWS  = require('aws-sdk');
 const fs = require('fs');
+const path = require('path');
 const fsp  = require('fs-promise');
 const exec = require('child_process').exec;
-
-const OUTPUT_PATH = 'dist';
-const ZIP_PATH    = 'dist.zip';
 
 const s3 = new AWS.S3({
   apiVersion: '2006-03-01'
@@ -40,12 +38,12 @@ class S3Downloader {
       .then(() => this.downloadAppZip())
       .then(() => this.unzipApp())
       .then(() => this.installNPMDependencies())
-      .then(() => OUTPUT_PATH);
+      .then(() => this.outputPath);
   }
 
   removeOldApp() {
-    this.ui.writeLine('removing ' + OUTPUT_PATH);
-    return fsp.remove(OUTPUT_PATH);
+    this.ui.writeLine('removing ' + this.outputPath);
+    return fsp.remove(this.outputPath);
   }
 
   fetchCurrentVersion() {
@@ -68,6 +66,8 @@ class S3Downloader {
 
         this.appBucket = config.bucket;
         this.appKey = config.key;
+        this.zipPath = path.basename(config.key);
+        this.outputPath = outputPathFor(this.zipPath);
 
         res();
       });
@@ -84,10 +84,11 @@ class S3Downloader {
         Key: key
       };
 
-      let file = fs.createWriteStream(ZIP_PATH);
+      let zipPath = this.zipPath;
+      let file = fs.createWriteStream(zipPath);
       let request = s3.getObject(params);
 
-      this.ui.writeLine("saving S3 object " + bucket + "/" + key + " to " + ZIP_PATH);
+      this.ui.writeLine("saving S3 object " + bucket + "/" + key + " to " + zipPath);
 
       request.createReadStream().pipe(file)
         .on('close', res)
@@ -96,14 +97,16 @@ class S3Downloader {
   }
 
   unzipApp() {
-    return this.exec('unzip ' + ZIP_PATH)
+    let zipPath = this.zipPath;
+
+    return this.exec('unzip ' + zipPath)
       .then(() => {
-        this.ui.writeLine("unzipped " + ZIP_PATH);
+        this.ui.writeLine("unzipped " + zipPath);
       });
   }
 
   installNPMDependencies() {
-    return this.exec(`cd ${OUTPUT_PATH} && npm install`)
+    return this.exec(`cd ${this.outputPath} && npm install`)
       .then(() => this.ui.writeLine('installed npm dependencies'))
       .catch(() => this.ui.writeError('unable to install npm dependencies'));
   }
@@ -121,6 +124,13 @@ class S3Downloader {
       });
     });
   }
+}
+
+function outputPathFor(zipPath) {
+  let name = path.basename(zipPath, '.zip');
+
+  // Remove MD5 hash
+  return name.split('-').slice(0, -1).join('-');
 }
 
 module.exports = S3Downloader;
