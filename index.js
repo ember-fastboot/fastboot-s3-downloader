@@ -47,20 +47,18 @@ class S3Downloader {
   }
 
   fetchCurrentVersion() {
-    return new Promise((res, rej) => {
-      let bucket = this.configBucket;
-      let key = this.configKey;
+    let bucket = this.configBucket;
+    let key = this.configKey;
 
-      this.ui.writeLine('fetching current app version from ' + bucket + '/' + key);
+    this.ui.writeLine('fetching current app version from ' + bucket + '/' + key);
 
-      let params = {
-        Bucket: bucket,
-        Key: key
-      };
+    let params = {
+      Bucket: bucket,
+      Key: key
+    };
 
-      s3.getObject(params, (err, data) => {
-        if (err) { return rej(err); }
-
+    return s3.getObject(params).promise()
+      .then(data => {
         let config = JSON.parse(data.Body);
         this.ui.writeLine('got config', config);
 
@@ -68,10 +66,7 @@ class S3Downloader {
         this.appKey = config.key;
         this.zipPath = path.basename(config.key);
         this.outputPath = outputPathFor(this.zipPath);
-
-        res();
       });
-    });
   }
 
   downloadAppZip() {
