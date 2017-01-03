@@ -42,6 +42,10 @@ class S3Downloader {
   }
 
   removeOldApp() {
+    if (!this.outputPath) {
+      return Promise.resolve();
+    }
+    
     this.ui.writeLine('removing ' + this.outputPath);
     return fsp.remove(this.outputPath);
   }
