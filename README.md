@@ -11,7 +11,8 @@ To use the downloader, configure it with an S3 bucket and key:
 ```js
 let downloader = new S3Downloader({
   bucket: S3_BUCKET,
-  key: S3_KEY
+  key: S3_KEY,
+  region: AWS_REGION // optional
 });
 
 let server = new FastBootAppServer({

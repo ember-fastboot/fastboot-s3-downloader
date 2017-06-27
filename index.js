@@ -6,11 +6,6 @@ const path = require('path');
 const fsp  = require('fs-promise');
 const exec = require('child_process').exec;
 
-const s3 = new AWS.S3({
-  apiVersion: '2006-03-01',
-  signatureVersion: 'v4'
-});
-
 function AppNotFoundError(message) {
   let error = new Error(message);
   error.name = 'AppNotFoundError';
@@ -26,6 +21,11 @@ class S3Downloader {
     this.ui = options.ui;
     this.configBucket = options.bucket;
     this.configKey = options.key;
+    this.s3 = new AWS.S3({
+      apiVersion: '2006-03-01',
+      signatureVersion: 'v4',
+      region: options.region
+    });
   }
 
   download() {
@@ -46,7 +46,7 @@ class S3Downloader {
     if (!this.outputPath) {
       return Promise.resolve();
     }
-    
+
     this.ui.writeLine('removing ' + this.outputPath);
     return fsp.remove(this.outputPath);
   }
@@ -62,7 +62,7 @@ class S3Downloader {
       Key: key
     };
 
-    return s3.getObject(params).promise()
+    return this.s3.getObject(params).promise()
       .then(data => {
         let config = JSON.parse(data.Body);
         this.ui.writeLine('got config', config);
@@ -86,7 +86,7 @@ class S3Downloader {
 
       let zipPath = this.zipPath;
       let file = fs.createWriteStream(zipPath);
-      let request = s3.getObject(params);
+      let request = this.s3.getObject(params);
 
       this.ui.writeLine("saving S3 object " + bucket + "/" + key + " to " + zipPath);
 
