@@ -12,6 +12,8 @@ To use the downloader, configure it with an S3 bucket and key:
 let downloader = new S3Downloader({
   bucket: S3_BUCKET,
   key: S3_KEY,
+  accessKeyId: AWS_KEY, // optional
+  secretAccessKey: AWS_SECRET, // optional
   region: AWS_REGION // optional
 });
 
